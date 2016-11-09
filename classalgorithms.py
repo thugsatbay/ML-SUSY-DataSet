@@ -78,11 +78,40 @@ class NaiveBayes(Classifier):
         # If usecolumnones is False, it ignores this last feature
         self.params = {'usecolumnones': False}
         self.reset(parameters)
-            
+        self.sigma=[]
+        self.variance=[]
+        self.probY=[]
+        
+
     def reset(self, parameters):
         self.resetparams(parameters)
         # TODO: set up required variables for learning
         
+    def learn(self,Xtrain,Ytrain):
+        print Xtrain.shape,"Before Columns One"
+        if params[usecolumnones]:
+            Xtrain=Xtrain[:,-1]
+        print Xtrain.shape,"After Column One"
+        y1Samples,y0Samples=float(len(Ytrain==1)),float(len(Ytrain==0))
+        probY1,probY0=y1Samples/len(Ytrain),y0Samples/len(Ytrain)
+        yTrue0=1-Ytrain
+        sigma1=np.sum(np.dot(np.diag(Ytrain),Xtrain),axis=0)/y1Samples
+        sigma0=np.sum(np.dot(np.diag(YTrue0),Xtrain),axis=0)/y0Samples
+        variance1=np.sum(np.dot(np.diag(Ytrain),np.square(Xtrain-sigma1)),axis=0)/y1Samples
+        variance0=np.sum(np.dot(np.diag(yTrue0),np.square(Xtrain-sigma0)),axis=0)/y0Samples
+        self.sigma=[sigma0,sigma1]
+        self.variance=[variance0,variance1]
+        self.probY=[probY0,probY1]
+
+    def predict(self,Xtest):
+        dim=[Xtest.shape(0),Xtest.shape(1)]
+        probNB1=[[calculateprob(Xtest[r,c],self.sigma[1],self.variance[1]) for c in dim[1]] for r in dim[0]]
+        probNB0=[[calculateprob(Xtest[r,c],self.sigma[0],self.variance[0]) for c in dim[1]] for r in dim[0]]
+        NB1MLPR=(np.prod(probNB1,axis=1))*self.probY[1]
+        NB0MLPR=(np.prod(probNB0,axis=1))*self.probY[0]
+        ytest=[1 for x in xrange(dim[0]) if NB1MLPR[x]>NB0MLPR[x] else 0]
+        return ytest
+
     # TODO: implement learn and predict functions                  
             
 class LogitReg(Classifier):

@@ -37,6 +37,7 @@ if __name__ == '__main__':
     numalgs = len(classalgs)    
 
     parameters = (
+        #Regularization Weight, neural network height?
         {'regwgt': 0.0, 'nh': 4},
         {'regwgt': 0.01, 'nh': 8},
         {'regwgt': 0.05, 'nh': 16},
@@ -49,7 +50,11 @@ if __name__ == '__main__':
         errors[learnername] = np.zeros((numparams,numruns))
                 
     for r in range(numruns):
-    	trainset, testset = dtl.load_susy(trainsize,testsize)
+    	
+        ##
+        ##Fetching Data; Put Condition Which DataSet To Run
+        ##
+        trainset, testset = dtl.load_susy(trainsize,testsize)
     	#trainset, testset = dtl.load_susy_complete(trainsize,testsize)
 
         print('Running on train={0} and test={1} samples for run {2}').format(trainset[0].shape[0], testset[0].shape[0],r)
