@@ -12,11 +12,13 @@ def stdev(numbers):
     return math.sqrt(variance)
 
 def calculateprob(x, mean, stdev):
+
     if stdev < 1e-3:
         if math.fabs(x-mean) < 1e-2:
             return 1.0
         else:
             return 0
+
     exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
     return (1 / (math.sqrt(2*math.pi) * stdev)) * exponent
     

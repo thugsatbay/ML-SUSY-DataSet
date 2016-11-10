@@ -1,6 +1,8 @@
 from __future__ import division  # floating point division
 import numpy as np
 import utilities as utils
+import math
+from sklearn.naive_bayes import GaussianNB
 
 class Classifier:
     """
@@ -76,40 +78,58 @@ class NaiveBayes(Classifier):
         """ Params can contain any useful parameters for the algorithm """
         # Assumes that a bias unit has been added to feature vector as the last feature
         # If usecolumnones is False, it ignores this last feature
-        self.params = {'usecolumnones': False}
+        self.params = {'notusecolumnones': False}
         self.reset(parameters)
         self.sigma=[]
         self.variance=[]
         self.probY=[]
-        
+        #self.skGNB=[]
 
     def reset(self, parameters):
         self.resetparams(parameters)
         # TODO: set up required variables for learning
         
     def learn(self,Xtrain,Ytrain):
-        print Xtrain.shape,"Before Columns One"
-        if params[usecolumnones]:
-            Xtrain=Xtrain[:,-1]
-        print Xtrain.shape,"After Column One"
-        y1Samples,y0Samples=float(len(Ytrain==1)),float(len(Ytrain==0))
+        if self.params['notusecolumnones']:
+            Xtrain=Xtrain[:,np.array(xrange(Xtrain.shape[1]-1))]
+        y1Samples,y0Samples=float(len(Ytrain[Ytrain==1])),float(len(Ytrain[Ytrain==0]))
         probY1,probY0=y1Samples/len(Ytrain),y0Samples/len(Ytrain)
-        yTrue0=1-Ytrain
-        sigma1=np.sum(np.dot(np.diag(Ytrain),Xtrain),axis=0)/y1Samples
-        sigma0=np.sum(np.dot(np.diag(YTrue0),Xtrain),axis=0)/y0Samples
-        variance1=np.sum(np.dot(np.diag(Ytrain),np.square(Xtrain-sigma1)),axis=0)/y1Samples
-        variance0=np.sum(np.dot(np.diag(yTrue0),np.square(Xtrain-sigma0)),axis=0)/y0Samples
+        sigma1=np.sum(Xtrain[Ytrain==1,],axis=0)/y1Samples
+        sigma0=np.sum(Xtrain[Ytrain==0,],axis=0)/y0Samples
+        variance1=np.sum(np.square(Xtrain[Ytrain==1,]-sigma1),axis=0)/y1Samples
+        variance0=np.sum(np.square(Xtrain[Ytrain==0,]-sigma0),axis=0)/y0Samples
+        
+
+        #gnb = GaussianNB()
+        #self.skGNB = gnb.fit(Xtrain, Ytrain)
+        
         self.sigma=[sigma0,sigma1]
         self.variance=[variance0,variance1]
         self.probY=[probY0,probY1]
 
+
     def predict(self,Xtest):
-        dim=[Xtest.shape(0),Xtest.shape(1)]
-        probNB1=[[calculateprob(Xtest[r,c],self.sigma[1],self.variance[1]) for c in dim[1]] for r in dim[0]]
-        probNB0=[[calculateprob(Xtest[r,c],self.sigma[0],self.variance[0]) for c in dim[1]] for r in dim[0]]
+        
+        if self.params['notusecolumnones']:
+            Xtest=Xtest[:,np.array(xrange(Xtest.shape[1]-1))]
+        #ttemp=self.skGNB.predict(Xtest)
+        '''
+        print self.skGNB.theta_
+        print self.sigma
+        print ""
+        print ""
+        print self.skGNB.sigma_
+        print self.variance
+        '''
+        dim=[Xtest.shape[0],Xtest.shape[1]]
+        probNB1=[[utils.calculateprob(Xtest[r,c],self.sigma[1][c],math.sqrt(self.variance[1][c])) for c in xrange(dim[1])] for r in xrange(dim[0])]
+        #print "Shape Of probNB1",len(probNB1),len(probNB1[0])
+        probNB0=[[utils.calculateprob(Xtest[r,c],self.sigma[0][c],math.sqrt(self.variance[0][c])) for c in xrange(dim[1])] for r in xrange(dim[0])]
         NB1MLPR=(np.prod(probNB1,axis=1))*self.probY[1]
+        #print "Shape of NB1MLPR",len(NB1MLPR)
+        #print NB1MLPR
         NB0MLPR=(np.prod(probNB0,axis=1))*self.probY[0]
-        ytest=[1 for x in xrange(dim[0]) if NB1MLPR[x]>NB0MLPR[x] else 0]
+        ytest=[1 if NB1MLPR[x]>NB0MLPR[x] else 0 for x in xrange(dim[0])]
         return ytest
 
     # TODO: implement learn and predict functions                  
@@ -136,6 +156,7 @@ class LogitReg(Classifier):
 
 class NeuralNet(Classifier):
 
+    #Stochastic Neural Net
     def __init__(self, parameters={}):
         self.params = {'nh': 4,
                         'transfer': 'sigmoid',
@@ -153,7 +174,28 @@ class NeuralNet(Classifier):
             raise Exception('NeuralNet -> can only handle sigmoid transfer, must set option transfer to string sigmoid')      
         self.wi = None
         self.wo = None
-        
+        self.hiddenLayerHeight=None
+        self.outputLayer=2
+        self.epochs=None
+        if 'epochs' in self.params:
+            self.epochs=self.params['epochs']
+        else:
+            self.epochs=100
+        if 'nh' in self.params:
+            self.hiddenLayerHeight=self.params['nh']
+        else
+            self.hiddenLayerHeight=4
+
+    def learn(self,Xtrain,Ytrain):
+        print "Neural Network Hidden Layer Height", self.hiddenLayerHeight
+        dim=[Xtrain.shape[0],Xtrain.shape[1]]
+        #initializing weights
+        self.wi=[[np.random.normal(0,1,dim[1])] for x in xrange(self.hiddenLayerHeight)]
+        self.wo=[[np.random.normal(0,1,self.hiddenLayerHeight)] for x in xrange(self.outputLayer)]
+        for ep in xrange(self.epochs):
+            for n in xrange(dim[0]):
+                XOneSample=Xtrain[n,:]
+                np.dot(XoneSample)
     # TODO: implement learn and predict functions                  
 
     
