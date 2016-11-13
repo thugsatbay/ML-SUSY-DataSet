@@ -25,20 +25,20 @@ if __name__ == '__main__':
     numruns = 1
 
     classalgs = {'Random': algs.Classifier(),
-                 'Naive Bayes': algs.NaiveBayes({'notusecolumnones': True}),
-                 'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
+                 #'Naive Bayes': algs.NaiveBayes({'notusecolumnones': True}),
+                 #'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
                  'Linear Regression': algs.LinearRegressionClass(),
                  #'Logistic Regression': algs.LogitReg(),
                  #'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
                  #'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
                  #'Logistic Alternative': algs.LogitRegAlternative(),                 
-                 #'Neural Network': algs.NeuralNet({'epochs': 100})
+                 'Neural Network': algs.NeuralNet({'epochs': 100,'alpha':.01})
                 }  
     numalgs = len(classalgs)    
 
     parameters = (
         #Regularization Weight, neural network height?
-        {'regwgt': 0.0, 'nh': 4},
+        {'regwgt': 0.0, 'nh': 8},
         #{'regwgt': 0.01, 'nh': 8},
         #{'regwgt': 0.05, 'nh': 16},
         #{'regwgt': 0.1, 'nh': 32},

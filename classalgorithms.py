@@ -177,25 +177,84 @@ class NeuralNet(Classifier):
         self.hiddenLayerHeight=None
         self.outputLayer=2
         self.epochs=None
+        self.alpha=None
+        if 'alpha' in self.params:
+            self.alpha=self.params['alpha']
+        else:
+            self.alpha=0.1
         if 'epochs' in self.params:
             self.epochs=self.params['epochs']
         else:
             self.epochs=100
         if 'nh' in self.params:
             self.hiddenLayerHeight=self.params['nh']
-        else
+        else:
             self.hiddenLayerHeight=4
 
     def learn(self,Xtrain,Ytrain):
         print "Neural Network Hidden Layer Height", self.hiddenLayerHeight
         dim=[Xtrain.shape[0],Xtrain.shape[1]]
         #initializing weights
-        self.wi=[[np.random.normal(0,1,dim[1])] for x in xrange(self.hiddenLayerHeight)]
-        self.wo=[[np.random.normal(0,1,self.hiddenLayerHeight)] for x in xrange(self.outputLayer)]
+        self.wi=np.array([np.random.random_sample((dim[1],)) for x in xrange(self.hiddenLayerHeight)]) #hL*d
+        self.wo=np.array([np.random.random_sample((self.hiddenLayerHeight,)) for x in xrange(self.outputLayer)]) #k*hL
+        print self.wi.shape
+        print self.wo.shape
+        reshapeSize=1
+        Sigmoid=np.vectorize(lambda x: utils.sigmoid(x))
         for ep in xrange(self.epochs):
-            for n in xrange(dim[0]):
-                XOneSample=Xtrain[n,:]
-                np.dot(XoneSample)
+            #randomSample=np.random.permutation(samples)
+            print "On Epoch",(ep+1)
+            for n in xrange(Xtrain.shape[0]):
+                
+                yOutput=Ytrain[n]
+                if yOutput==0:
+                    yOutput=np.array([1,0]).reshape(self.outputLayer,reshapeSize)
+                else:
+                    yOutput=np.array([0,1]).reshape(self.outputLayer,reshapeSize)
+                a1=Xtrain[n,:].reshape(dim[1],1) #d*1
+                #print "a1",a1.shape
+                z1=np.dot(self.wi,a1) #hL*1
+                #print "z1",z1.shape
+                a2=utils.sigmoid(z1) #hL*1
+                #print "a2",a2.shape
+                z2=np.dot(self.wo,a2) #k*1
+                #print "z2",z2.shape
+                a3f=utils.sigmoid(z2) #k*1
+                #print "a3",a3f.shape
+                delta2=(a3f-yOutput).reshape(self.outputLayer,reshapeSize)*utils.dsigmoid(z2).reshape(self.outputLayer,reshapeSize) #k*1
+                #print "delta2",delta2.shape
+                upDateWouter=np.dot(delta2,a2.T) #k*hL
+                delta1=np.array(utils.dsigmoid(z1)).reshape(self.hiddenLayerHeight,reshapeSize)*np.dot(self.wo.T,delta2).reshape(self.hiddenLayerHeight,reshapeSize) #hL*1
+                #print "delta1",delta1.shape
+                upDateWinner=np.dot(delta1,a1.T) #hL*d
+                tAlpha=self.alpha
+                self.wi=self.wi-(tAlpha*upDateWinner)
+                self.wo=self.wo-(tAlpha*upDateWouter)      
+                '''
+                if n%5000==0:
+                    print "Step ",(n+1),") Old Cost : ",errOld," Step Size : ",tAlpha
+                '''
+            diffSigmoid=np.vectorize(lambda x: utils.dsigmoid(x))
+            z1=np.dot(self.wi,Xtrain.T) #hL*n
+            a2=np.array([utils.sigmoid(z1[:,x]) for x in xrange(Xtrain.shape[0])]) #n*hL
+            z2=np.dot(self.wo,a2.T) #k*n
+            a3f=np.array([utils.sigmoid(z2[:,x]) for x in xrange(Xtrain.shape[0])]) #n*k
+            ytest=np.array([1 if a3f[x,1]>a3f[x,0] else 0 for x in xrange(Xtrain.shape[0])])
+            correct = 0
+            for i in range(len(ytest)):
+                if ytest[i] == Ytrain[i]:
+                    correct += 1
+            print (correct/float(len(ytest))) * 100.0
+
+
+    def predict(self, Xtest):
+        diffSigmoid=np.vectorize(lambda x: utils.dsigmoid(x))
+        z1=np.dot(self.wi,Xtest.T) #hL*n
+        a2=np.array([utils.sigmoid(z1[:,x]) for x in xrange(Xtest.shape[0])]) #n*hL
+        z2=np.dot(self.wo,a2.T) #k*n
+        a3f=np.array([utils.sigmoid(z2[:,x]) for x in xrange(Xtest.shape[0])]) #n*k
+        ytest=np.array([1 if a3f[x,1]>a3f[x,0] else 0 for x in xrange(Xtest.shape[0])])
+        return ytest
     # TODO: implement learn and predict functions                  
 
     
@@ -208,7 +267,7 @@ class NeuralNet(Classifier):
             raise ValueError('NeuralNet:evaluate -> Wrong number of inputs')
         
         # hidden activations
-        ah = self.transfer(np.dot(self.wi,inputs))  
+        ah = self.transfer(np.dot(self.wi,inputs))
 
         # output activations
         ao = self.transfer(np.dot(self.wo,ah))

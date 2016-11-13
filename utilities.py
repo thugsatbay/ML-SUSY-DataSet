@@ -22,10 +22,11 @@ def calculateprob(x, mean, stdev):
     exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
     return (1 / (math.sqrt(2*math.pi) * stdev)) * exponent
     
-def sigmoid(xvec):
+def sigmoid(xvec1):
     """ Compute the sigmoid function """
     # Cap -xvec, to avoid overflow
     # Undeflow is okay, since it get set to zero
+    xvec=xvec1.copy()
     xvec[xvec < -100] = -100
 
         
