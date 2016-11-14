@@ -25,10 +25,10 @@ if __name__ == '__main__':
     numruns = 1
 
     classalgs = {'Random': algs.Classifier(),
-                 'Naive Bayes': algs.NaiveBayes({'notusecolumnones': True}),
-                 'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
-                 'Linear Regression': algs.LinearRegressionClass(),
-                 'Logistic Regression': algs.LogitReg(),
+                 #'Naive Bayes': algs.NaiveBayes({'notusecolumnones': True}),
+                 #'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
+                 #'Linear Regression': algs.LinearRegressionClass(),
+                 #'Logistic Regression': algs.LogitReg(),
                  #'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
                  #'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
                  #'Logistic Alternative': algs.LogitRegAlternative(),                 

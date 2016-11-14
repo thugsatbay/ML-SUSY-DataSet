@@ -230,9 +230,7 @@ class NeuralNet(Classifier):
         dim=[Xtrain.shape[0],Xtrain.shape[1]]
         #initializing weights
         self.wi=np.array([np.random.random_sample((dim[1],)) for x in xrange(self.hiddenLayerHeight)]) #hL*d
-        self.wo=np.array([np.random.random_sample((self.hiddenLayerHeight,)) for x in xrange(self.outputLayer)]) #k*hL
-        print self.wi.shape
-        print self.wo.shape
+        self.wo=np.array([np.random.random_sample((self.hiddenLayerHeight+1,)) for x in xrange(self.outputLayer)]) #k*hL
         reshapeSize=1
         Sigmoid=np.vectorize(lambda x: utils.sigmoid(x))
         for ep in xrange(self.epochs):
@@ -249,6 +247,7 @@ class NeuralNet(Classifier):
                 z1=np.dot(self.wi,a1) #hL*1
                 #print "z1",z1.shape
                 a2=utils.sigmoid(z1) #hL*1
+                a2=np.insert(a2,0,1).reshape(self.hiddenLayerHeight+1,1) #hLB*1
                 #print "a2",a2.shape
                 z2=np.dot(self.wo,a2) #k*1
                 #print "z2",z2.shape
@@ -256,10 +255,10 @@ class NeuralNet(Classifier):
                 #print "a3",a3f.shape
                 delta2=(a3f-yOutput).reshape(self.outputLayer,reshapeSize)*utils.dsigmoid(z2).reshape(self.outputLayer,reshapeSize) #k*1
                 #print "delta2",delta2.shape
-                upDateWouter=np.dot(delta2,a2.T) #k*hL
-                delta1=np.array(utils.dsigmoid(z1)).reshape(self.hiddenLayerHeight,reshapeSize)*np.dot(self.wo.T,delta2).reshape(self.hiddenLayerHeight,reshapeSize) #hL*1
+                upDateWouter=np.dot(delta2,a2.T) #k*hLB
+                delta1=np.array(utils.dsigmoid(z1)).reshape(self.hiddenLayerHeight,reshapeSize)*np.dot(self.wo[:,1:].T,delta2).reshape(self.hiddenLayerHeight,reshapeSize) #hL*1
                 #print "delta1",delta1.shape
-                upDateWinner=np.dot(delta1,a1.T) #hL*d
+                upDateWinner=np.dot(delta1,a1.T) #hLB*d
                 tAlpha=self.alpha
                 self.wi=self.wi-(tAlpha*upDateWinner)
                 self.wo=self.wo-(tAlpha*upDateWouter)      
@@ -277,6 +276,7 @@ class NeuralNet(Classifier):
         diffSigmoid=np.vectorize(lambda x: utils.dsigmoid(x))
         z1=np.dot(self.wi,Xtest.T) #hL*n
         a2=np.array([utils.sigmoid(z1[:,x]) for x in xrange(Xtest.shape[0])]) #n*hL
+        a2=np.insert(a2,0,1,axis=1)
         z2=np.dot(self.wo,a2.T) #k*n
         a3f=np.array([utils.sigmoid(z2[:,x]) for x in xrange(Xtest.shape[0])]) #n*k
         ytest=np.array([1 if a3f[x,1]>a3f[x,0] else 0 for x in xrange(Xtest.shape[0])])
