@@ -138,8 +138,16 @@ class LogitReg(Classifier):
 
     def __init__( self, parameters={} ):
         # Default: no regularization
-        self.params = {'regwgt': 0.0, 'regularizer': 'None'}
+        self.params = {'regwgt': 0.0, 'regularizer': 'None','iterations':1000,'step-size':1,'tolerance':.000001}
         self.reset(parameters)
+
+    def _costFunction(self,Xtrain,Ytrain,tempWeights):
+        #print Xtrain.shape,tempWeights.shape
+        #print np.dot(Xtrain,tempWeights).shape
+        return np.sum(((-Ytrain)*np.log(utils.sigmoid(np.dot(Xtrain,tempWeights))))-((1-Ytrain)*(np.log(1-utils.sigmoid(np.dot(Xtrain,tempWeights))))))/Xtrain.shape[0]
+
+    def _gradientDescentFunction(self,Xtrain,Ytrain,tempWeights):
+        return np.dot(Xtrain.T,utils.sigmoid(np.dot(Xtrain,tempWeights))-Ytrain)/Xtrain.shape[0]
 
     def reset(self, parameters):
         self.resetparams(parameters)
@@ -151,6 +159,32 @@ class LogitReg(Classifier):
         else:
             self.regularizer = (lambda w: 0, lambda w: np.zeros(w.shape,))
      
+    def learn(self,Xtrain,Ytrain):
+        dim=(Xtrain.shape[0],Xtrain.shape[1]) #n*d
+        Ytrain=Ytrain.reshape(dim[0],1) #n*1
+        self.weights=np.array(np.random.random_sample((dim[1],))).reshape(dim[1],1) #d*1
+        errorVal=self._costFunction(Xtrain,Ytrain,self.weights)
+        for runs in xrange(self.params['iterations']):
+            sstemp=self.params['step-size']
+            newErrorVal=self._costFunction(Xtrain,Ytrain,self.weights)
+            while newErrorVal>=errorVal:
+                wtemp=self.weights-((sstemp)*self._gradientDescentFunction(Xtrain,Ytrain,tempWeights=self.weights))
+                newErrorVal=self._costFunction(Xtrain,Ytrain,wtemp)
+                sstemp=sstemp/2
+            if runs%50==0:
+                print "Logistic Regresssion Error Value",newErrorVal,"Step-Size",sstemp*2
+            errorVal=newErrorVal
+            self.weights=wtemp
+            if errorVal<self.params['tolerance']:
+                print "Tolerance Reached At Run",runs
+                break
+
+    def predict(self,Xtest):
+        ytest = utils.sigmoid(np.dot(Xtest, self.weights))
+        ytest[ytest >= .5] = 1     
+        ytest[ytest < .5] = 0    
+        return ytest
+         
     # TODO: implement learn and predict functions                  
            
 
@@ -203,7 +237,6 @@ class NeuralNet(Classifier):
         Sigmoid=np.vectorize(lambda x: utils.sigmoid(x))
         for ep in xrange(self.epochs):
             #randomSample=np.random.permutation(samples)
-            print "On Epoch",(ep+1)
             for n in xrange(Xtrain.shape[0]):
                 
                 yOutput=Ytrain[n]
@@ -230,21 +263,14 @@ class NeuralNet(Classifier):
                 tAlpha=self.alpha
                 self.wi=self.wi-(tAlpha*upDateWinner)
                 self.wo=self.wo-(tAlpha*upDateWouter)      
-                '''
-                if n%5000==0:
-                    print "Step ",(n+1),") Old Cost : ",errOld," Step Size : ",tAlpha
-                '''
-            diffSigmoid=np.vectorize(lambda x: utils.dsigmoid(x))
-            z1=np.dot(self.wi,Xtrain.T) #hL*n
-            a2=np.array([utils.sigmoid(z1[:,x]) for x in xrange(Xtrain.shape[0])]) #n*hL
-            z2=np.dot(self.wo,a2.T) #k*n
-            a3f=np.array([utils.sigmoid(z2[:,x]) for x in xrange(Xtrain.shape[0])]) #n*k
-            ytest=np.array([1 if a3f[x,1]>a3f[x,0] else 0 for x in xrange(Xtrain.shape[0])])
-            correct = 0
-            for i in range(len(ytest)):
-                if ytest[i] == Ytrain[i]:
-                    correct += 1
-            print (correct/float(len(ytest))) * 100.0
+            if ep%20==0:
+                ytest=self.predict(Xtrain)
+                correct = 0
+                for i in range(len(ytest)):
+                    if ytest[i] == Ytrain[i]:
+                        correct += 1
+                print "On Epoch",(ep+1)
+                print "Accuracy For Training Model",(correct/float(len(ytest))) * 100.0
 
 
     def predict(self, Xtest):

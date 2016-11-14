@@ -25,10 +25,10 @@ if __name__ == '__main__':
     numruns = 1
 
     classalgs = {'Random': algs.Classifier(),
-                 #'Naive Bayes': algs.NaiveBayes({'notusecolumnones': True}),
-                 #'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
+                 'Naive Bayes': algs.NaiveBayes({'notusecolumnones': True}),
+                 'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
                  'Linear Regression': algs.LinearRegressionClass(),
-                 #'Logistic Regression': algs.LogitReg(),
+                 'Logistic Regression': algs.LogitReg(),
                  #'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
                  #'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
                  #'Logistic Alternative': algs.LogitRegAlternative(),                 
@@ -68,7 +68,9 @@ if __name__ == '__main__':
             for learnername, learner in classalgs.iteritems():
                 # Reset learner for new parameters
                 learner.reset(params)
+                print "\n"
                 print 'Running learner = ' + learnername + ' on parameters ' + str(learner.getparams())
+                print ""
                 # Train model
                 learner.learn(trainset[0], trainset[1])
                 # Test model
