@@ -29,19 +29,19 @@ if __name__ == '__main__':
                  #'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
                  #'Linear Regression': algs.LinearRegressionClass(),
                  #'Logistic Regression': algs.LogitReg(),
-                 #'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
-                 #'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
+                 'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
+                 'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
                  #'Logistic Alternative': algs.LogitRegAlternative(),                 
-                 'Neural Network': algs.NeuralNet({'epochs': 100,'alpha':.01})
+                 #'Neural Network': algs.NeuralNet({'epochs': 100,'alpha':.01})
                 }  
     numalgs = len(classalgs)    
 
     parameters = (
         #Regularization Weight, neural network height?
-        {'regwgt': 0.0, 'nh': 8},
-        #{'regwgt': 0.01, 'nh': 8},
-        #{'regwgt': 0.05, 'nh': 16},
-        #{'regwgt': 0.1, 'nh': 32},
+        {'regwgt': 0.0, 'nh': 4},
+        {'regwgt': 0.01, 'nh': 8},
+        {'regwgt': 0.05, 'nh': 16},
+        {'regwgt': 0.1, 'nh': 32},
                       )
     numparams = len(parameters) 
     errors = {}
@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 
     for r in range(numruns):
         print ""
-        print "**********//////////////########### Run Number : ",(r+1),"**********//////////////###########"
+        print "**********//////////////########### Run Number : ",(r+1),"###########\\\\\\\\\\\\\\\\\\\\\\\\\\\\*********"
         print ""
         ##
         ##Fetching Data; Put Condition Which DataSet To Run

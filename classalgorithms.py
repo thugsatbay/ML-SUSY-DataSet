@@ -138,7 +138,7 @@ class LogitReg(Classifier):
 
     def __init__( self, parameters={} ):
         # Default: no regularization
-        self.params = {'regwgt': 0.0, 'regularizer': 'None','iterations':1000,'step-size':1,'tolerance':.000001}
+        self.params = {'regwgt': 0.05, 'regularizer': 'None','iterations':1000,'step-size':20,'tolerance':.000001}
         self.reset(parameters)
 
     def _costFunction(self,Xtrain,Ytrain,tempWeights):
@@ -151,25 +151,36 @@ class LogitReg(Classifier):
 
     def reset(self, parameters):
         self.resetparams(parameters)
-        self.weights = None
+        self.weights,self.regwgt = None,None
         if self.params['regularizer'] is 'l1':
             self.regularizer = (utils.l1, utils.dl1)
         elif self.params['regularizer'] is 'l2':
             self.regularizer = (utils.l2, utils.dl2)
         else:
             self.regularizer = (lambda w: 0, lambda w: np.zeros(w.shape,))
-     
+        if 'regwgt' in self.params:
+            self.regwgt=self.params['regwgt']
+        else:
+            self.regwgt=0
+    
+
     def learn(self,Xtrain,Ytrain):
         dim=(Xtrain.shape[0],Xtrain.shape[1]) #n*d
         Ytrain=Ytrain.reshape(dim[0],1) #n*1
         self.weights=np.array(np.random.random_sample((dim[1],))).reshape(dim[1],1) #d*1
-        errorVal=self._costFunction(Xtrain,Ytrain,self.weights)
+        errorVal=self._costFunction(Xtrain,Ytrain,self.weights)+((self.regwgt*self.regularizer[0](self.weights))/dim[0])
         for runs in xrange(self.params['iterations']):
             sstemp=self.params['step-size']
-            newErrorVal=self._costFunction(Xtrain,Ytrain,self.weights)
+            newErrorVal=self._costFunction(Xtrain,Ytrain,self.weights)+((self.regwgt*self.regularizer[0](self.weights))/dim[0])
+            #Line Search With Regularization
             while newErrorVal>=errorVal:
-                wtemp=self.weights-((sstemp)*self._gradientDescentFunction(Xtrain,Ytrain,tempWeights=self.weights))
-                newErrorVal=self._costFunction(Xtrain,Ytrain,wtemp)
+                #print "Inside While"
+                if self.params['regularizer'] is 'l2':
+                    wtemp=self.weights-((sstemp)*self._gradientDescentFunction(Xtrain,Ytrain,tempWeights=self.weights))-((sstemp*self.regwgt*self.regularizer[1](self.weights))/dim[0])
+                else:
+                    wtemp=self.weights-((sstemp)*self._gradientDescentFunction(Xtrain,Ytrain,tempWeights=self.weights))-((sstemp*self.regwgt*self.regularizer[1](self.weights))/dim[0])
+                    wtemp=wtemp*np.abs(self.regularizer[1](self.weights))
+                newErrorVal=self._costFunction(Xtrain,Ytrain,wtemp)+((self.regwgt*self.regularizer[0](wtemp))/dim[0])
                 sstemp=sstemp/2
             if runs%50==0:
                 print "Logistic Regresssion Error Value",newErrorVal,"Step-Size",sstemp*2
@@ -178,6 +189,13 @@ class LogitReg(Classifier):
             if errorVal<self.params['tolerance']:
                 print "Tolerance Reached At Run",runs
                 break
+        count=0
+        if self.params['regularizer'] is 'l1':
+            for x in self.weights:
+                if float(x)==float(0):
+                    count=count+1
+            print "Weights By L1 turned turned to Zero for Regression Model",count,"from",self.weights.shape[0],"features."
+            print self.weights
 
     def predict(self,Xtest):
         ytest = utils.sigmoid(np.dot(Xtest, self.weights))
@@ -234,8 +252,10 @@ class NeuralNet(Classifier):
         reshapeSize=1
         Sigmoid=np.vectorize(lambda x: utils.sigmoid(x))
         for ep in xrange(self.epochs):
-            #randomSample=np.random.permutation(samples)
-            for n in xrange(Xtrain.shape[0]):
+            randomSample=np.random.permutation(dim[0])
+            Xtrain=Xtrain[randomSample,:]
+            Ytrain=Ytrain[randomSample]
+            for n in xrange(dim[0]):
                 
                 yOutput=Ytrain[n]
                 if yOutput==0:
@@ -268,8 +288,7 @@ class NeuralNet(Classifier):
                 for i in range(len(ytest)):
                     if ytest[i] == Ytrain[i]:
                         correct += 1
-                print "On Epoch",(ep+1)
-                print "Accuracy For Training Model",(correct/float(len(ytest))) * 100.0
+                print "On Epoch",(ep+1),"Accuracy For Training Model",(correct/float(len(ytest))) * 100.0
 
 
     def predict(self, Xtest):
@@ -309,7 +328,71 @@ class LogitRegAlternative(Classifier):
     def reset(self, parameters):
         self.resetparams(parameters)
         self.weights = None
-        
-    # TODO: implement learn and predict functions                  
-           
-    
+        self.params['epoch']=100
+        self.params['alpha']=.001
+
+    def _costFunction(self,XtrainF,YtrainF,tempWeights):
+        result=0
+        for x in xrange(XtrainF.shape[0]):
+            Xtrain,Ytrain=XtrainF[x,:],YtrainF[x]
+            wx=float(np.dot(Xtrain.T,tempWeights))
+            fwx=wx/(math.sqrt(1+(wx*wx)))
+            result=result+np.sum(((-Ytrain)*np.log(.5*(1+fwx)))-((1-Ytrain)*(np.log(.5*(1-fwx)))))
+        return result/XtrainF.shape[0]
+
+    def _gradientFunction(self,Xtrain,Ytrain,tempWeights):
+        wx=float(np.dot(Xtrain.T,tempWeights))
+        fwx=(1/(math.sqrt(1+(wx*wx))))
+        return Xtrain*((2*Ytrain-1-(wx*fwx))*fwx)
+
+    #Stochastic Gradient Descent
+    def learnStoch(self,Xtrain,Ytrain):
+        dim=(Xtrain.shape[0],Xtrain.shape[1]) #n*d
+        Ytrain=Ytrain.reshape(dim[0],1) #n*1
+        self.weights=np.array(np.random.random_sample((dim[1],))).reshape(dim[1],1) #d*1
+        epoch=self.params['epoch']
+        alpha=self.params['alpha']
+        for i in xrange(epoch):
+            randomSample=np.random.permutation(dim[0])
+            Xtrain=Xtrain[randomSample,:]
+            for x in xrange(dim[0]):
+                XSample=Xtrain[x,:].reshape(dim[1],1)
+                YSample=Ytrain[x]
+                Xgradient=self._gradientFunction(XSample,YSample,self.weights)
+                if x%2==0:
+                    tAlpha=alpha/(x+1)
+                self.weights=self.weights+(tAlpha*Xgradient)
+            print "On Epoch : ",(i+1),"Cost After Epoch",self._costFunction(Xtrain,Ytrain,self.weights)
+
+
+    def learn(self,Xtrain,Ytrain):
+        dim=(Xtrain.shape[0],Xtrain.shape[1]) #n*d
+        Ytrain=Ytrain.reshape(dim[0],1) #n*1
+        self.weights=np.array(np.random.random_sample((dim[1],))).reshape(dim[1],1) #d*1
+        epoch=self.params['epoch']
+        for i in xrange(epoch):
+            alpha=self.params['alpha']
+            batchval=np.array([[self._gradientFunction(Xtrain[x,:].reshape(dim[1],1),Ytrain[x],self.weights).reshape(1,dim[1])] for x in xrange(dim[0])])
+            batchval=np.sum(batchval,axis=0).reshape(dim[1],1)
+            oldCost=self._costFunction(Xtrain,Ytrain,self.weights)
+            newCost=self._costFunction(Xtrain,Ytrain,self.weights)
+            while newCost>=oldCost:
+                stemp=self.weights+(alpha*batchval)
+                newCost=self._costFunction(Xtrain,Ytrain,stemp)
+                alpha=alpha/2
+            self.weights=stemp
+            print "On Epoch : ",(i+1),"Cost After Epoch",newCost,"step size",alpha*2
+        ytest=self.predict(Xtrain)
+        correct = 0
+        for i in range(len(ytest)):
+            if ytest[i] == Ytrain[i]:
+                correct += 1
+        print "Accuracy For Training Model",(correct/float(len(ytest))) * 100.0
+
+    def predict(self,Xtest):
+        nwx=np.dot(Xtest,self.weights)
+        ytest=np.array([(1+(v/(math.sqrt(1+(v*v)))))/2 for v in nwx])
+        ytest[ytest >= .5] = 1     
+        ytest[ytest < .5] = 0    
+        print self.weights
+        return ytest   

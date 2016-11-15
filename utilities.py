@@ -26,6 +26,7 @@ def sigmoid(xvec1):
     """ Compute the sigmoid function """
     # Cap -xvec, to avoid overflow
     # Undeflow is okay, since it get set to zero
+    #Somehow the passing nparray was in read mode and wasn't allowed to change its values
     xvec=xvec1.copy()
     xvec[xvec < -100] = -100
 
