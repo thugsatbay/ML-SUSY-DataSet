@@ -20,8 +20,8 @@ def geterror(ytest, predictions):
 
  
 if __name__ == '__main__':
-    trainsize = 5000
-    testsize = 1000
+    trainsize = 1000
+    testsize = 5000
     numruns = 1
 
     classalgs = {'Random': algs.Classifier(),
@@ -29,9 +29,9 @@ if __name__ == '__main__':
                  #'Naive Bayes Ones': algs.NaiveBayes({'notusecolumnones': False}),
                  #'Linear Regression': algs.LinearRegressionClass(),
                  #'Logistic Regression': algs.LogitReg(),
-                 'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
-                 'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
-                 #'Logistic Alternative': algs.LogitRegAlternative(),                 
+                 #'L1 Logistic Regression': algs.LogitReg({'regularizer': 'l1'}),
+                 #'L2 Logistic Regression': algs.LogitReg({'regularizer': 'l2'}),
+                 'Logistic Alternative': algs.LogitRegAlternative(),                 
                  #'Neural Network': algs.NeuralNet({'epochs': 100,'alpha':.01})
                 }  
     numalgs = len(classalgs)    
@@ -39,9 +39,9 @@ if __name__ == '__main__':
     parameters = (
         #Regularization Weight, neural network height?
         {'regwgt': 0.0, 'nh': 4},
-        {'regwgt': 0.01, 'nh': 8},
-        {'regwgt': 0.05, 'nh': 16},
-        {'regwgt': 0.1, 'nh': 32},
+        #{'regwgt': 0.01, 'nh': 8},
+        #{'regwgt': 0.05, 'nh': 16},
+        #{'regwgt': 0.1, 'nh': 32},
                       )
     numparams = len(parameters) 
     errors = {}

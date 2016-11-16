@@ -328,7 +328,7 @@ class LogitRegAlternative(Classifier):
     def reset(self, parameters):
         self.resetparams(parameters)
         self.weights = None
-        self.params['epoch']=100
+        self.params['epoch']=200
         self.params['alpha']=.001
 
     def _costFunction(self,XtrainF,YtrainF,tempWeights):
@@ -368,7 +368,7 @@ class LogitRegAlternative(Classifier):
     def learn(self,Xtrain,Ytrain):
         dim=(Xtrain.shape[0],Xtrain.shape[1]) #n*d
         Ytrain=Ytrain.reshape(dim[0],1) #n*1
-        self.weights=np.array(np.random.random_sample((dim[1],))).reshape(dim[1],1) #d*1
+        self.weights=np.array((np.random.random_sample((dim[1],)))).reshape(dim[1],1) #d*1
         epoch=self.params['epoch']
         for i in xrange(epoch):
             alpha=self.params['alpha']
@@ -381,18 +381,19 @@ class LogitRegAlternative(Classifier):
                 newCost=self._costFunction(Xtrain,Ytrain,stemp)
                 alpha=alpha/2
             self.weights=stemp
-            print "On Epoch : ",(i+1),"Cost After Epoch",newCost,"step size",alpha*2
+            if i%20==0:
+                print "On Epoch : ",(i+1),"Cost After Epoch",newCost,"step size",alpha*2
         ytest=self.predict(Xtrain)
         correct = 0
         for i in range(len(ytest)):
             if ytest[i] == Ytrain[i]:
                 correct += 1
         print "Accuracy For Training Model",(correct/float(len(ytest))) * 100.0
+        print self.weights
 
     def predict(self,Xtest):
         nwx=np.dot(Xtest,self.weights)
         ytest=np.array([(1+(v/(math.sqrt(1+(v*v)))))/2 for v in nwx])
         ytest[ytest >= .5] = 1     
         ytest[ytest < .5] = 0    
-        print self.weights
         return ytest   
